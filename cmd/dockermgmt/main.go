@@ -45,20 +45,16 @@ sleep 3600
 	template := containermgmt.Template{
 		ID:                   1,
 		TemplateName:         "test-alpine",
-		TemplateDescription:  "Test template with alpine",
 		OnStartScript:        onStartScript,
 		ExtraFilters:         []string{"test=yes", "source=example"},
-		VRAMRequiredGB:       0, // GPU не нужен
-		MaxPricePerHourCents: 0,
+		VRAMRequiredGB:       0,  // GPU не нужен
 		DockerServerName:     "", // public hub
 		DockerUsername:       "",
 		DockerPassword:       "",
-		IsPrivate:            false,
 		ImagePath:            "alpine:latest",
 		DockerOptions:        "",
 		Ports:                []string{"8080:80"}, // проброс порта, но alpine не слушает 80, просто для демонстрации
 		EnvironmentVariables: []string{"TEST_ENV=hello"},
-		Readme:               "",
 	}
 
 	// --- Шаг 2: Запуск контейнера ---
