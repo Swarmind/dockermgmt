@@ -206,17 +206,6 @@ func LaunchContainer(ctx context.Context, t Template) error {
 	return nil
 }
 
-func setOrAppendEnv(env []string, key, value string) []string {
-	prefix := key + "="
-	for i, e := range env {
-		if strings.HasPrefix(e, prefix) {
-			env[i] = prefix + value
-			return env
-		}
-	}
-	return append(env, prefix+value)
-}
-
 func parseDockerOptions(options string) (envVars []string, extraLabels map[string]string, err error) {
 	extraLabels = make(map[string]string)
 	if options == "" {
