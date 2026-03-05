@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
@@ -76,9 +77,7 @@ func LaunchContainer(ctx context.Context, t Template) error {
 			labels[filter] = ""
 		}
 	}
-	if t.VRAMRequiredGB > 0 {
-		//TODO:
-	}
+
 	labels["template-name"] = t.TemplateName
 	labels["managed-by"] = "template-manager"
 
@@ -166,16 +165,11 @@ func LaunchContainer(ctx context.Context, t Template) error {
 
 	// Если требуется GPU (VRAM) — добавляем DeviceRequests
 	if t.VRAMRequiredGB > 0 {
-		// Пример для NVIDIA GPU: запрашиваем все GPU с capabilities
-		hostConfig.Resources.DeviceRequests = []container.DeviceRequest{
-			{
-				Driver:       "nvidia",
-				Count:        0, // 0 означает все доступные GPU
-				Capabilities: [][]string{{"gpu"}},
-			},
-		}
-		// Более точное ограничение по VRAM через драйвер не поддерживается напрямую,
-		// но можно добавить соответствующую метку для внешнего планировщика.
+		// Убеждаемся, что драйвер NVIDIA будет использоваться (DeviceRequest уже добавляется ниже)
+		// Добавляем лимит памяти (в ГБ)
+		env = setOrAppendEnv(env, "NVIDIA_MEM_MAX_GB", strconv.Itoa(t.VRAMRequiredGB))
+		// Рекомендуется явно указать capabilities, чтобы контейнер мог использовать GPU
+		env = setOrAppendEnv(env, "NVIDIA_DRIVER_CAPABILITIES", "compute,utility")
 	}
 
 	// 10. Основная конфигурация контейнера
@@ -210,4 +204,15 @@ func LaunchContainer(ctx context.Context, t Template) error {
 
 	fmt.Printf("Container %s started with ID %s\n", t.TemplateName, resp.ID)
 	return nil
+}
+
+func setOrAppendEnv(env []string, key, value string) []string {
+	prefix := key + "="
+	for i, e := range env {
+		if strings.HasPrefix(e, prefix) {
+			env[i] = prefix + value
+			return env
+		}
+	}
+	return append(env, prefix+value)
 }
