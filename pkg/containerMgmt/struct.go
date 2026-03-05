@@ -11,7 +11,7 @@ type Template struct {
 	DockerServerName string `json:"docker_server_name"`
 	DockerUsername   string `json:"docker_username"`
 	DockerPassword   string `json:"docker_password"`
-	//DiskSpaceMB          int      `json:"disk_space_mb"`  <-For resizer only
+	DiskSpaceMB      int    `json:"disk_space_mb"`
 	//IsPrivate            bool     `json:"is_private"` 	<-For frontend only
 	ImagePath            string   `json:"image_path"`
 	DockerOptions        string   `json:"docker_options"`

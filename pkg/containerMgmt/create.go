@@ -172,6 +172,11 @@ func LaunchContainer(ctx context.Context, t Template) error {
 		Resources:    container.Resources{},
 	}
 
+	// Ограничение размера writable слоя контейнера
+	if t.DiskSpaceMB > 0 {
+		hostConfig.StorageOpt["size"] = fmt.Sprintf("%dm", t.DiskSpaceMB)
+	}
+
 	// 10. Основная конфигурация контейнера
 	config := &container.Config{
 		Image:  imageName,
