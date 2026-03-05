@@ -47,7 +47,6 @@ sleep 3600
 		TemplateName:         "test-alpine",
 		OnStartScript:        onStartScript,
 		ExtraFilters:         []string{"test=yes", "source=example"},
-		VRAMRequiredGB:       0,  // GPU не нужен
 		DockerServerName:     "", // public hub
 		DockerUsername:       "",
 		DockerPassword:       "",

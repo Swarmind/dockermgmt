@@ -4,9 +4,9 @@ type Template struct {
 	ID           int    `json:"id"`
 	TemplateName string `json:"template_name"`
 	//TemplateDescription  string   `json:"template_description"` <-For frontend only
-	OnStartScript  string   `json:"on_start_script"`
-	ExtraFilters   []string `json:"extra_filters"`
-	VRAMRequiredGB int      `json:"vram_required_gb"`
+	OnStartScript string   `json:"on_start_script"`
+	ExtraFilters  []string `json:"extra_filters"`
+	//VRAMRequiredGB int      `json:"vram_required_gb"`
 	//MaxPricePerHourCents int      `json:"max_price_per_hour_cents"` <-For frontend only
 	DockerServerName string `json:"docker_server_name"`
 	DockerUsername   string `json:"docker_username"`

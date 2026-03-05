@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
@@ -84,6 +83,16 @@ func LaunchContainer(ctx context.Context, t Template) error {
 	// 6. Переменные окружения
 	env := t.EnvironmentVariables
 
+	if t.DockerOptions != "" {
+		optEnv, optLabels, err := parseDockerOptions(t.DockerOptions)
+		if err != nil {
+			return fmt.Errorf("failed to parse DockerOptions: %w", err)
+		}
+		env = append(env, optEnv...)
+		for k, v := range optLabels {
+			labels[k] = v
+		}
+	}
 	// 7. Обработка OnStartScript: создаём постоянный файл
 	var cmd []string
 	var binds []string
@@ -163,15 +172,6 @@ func LaunchContainer(ctx context.Context, t Template) error {
 		Resources:    container.Resources{},
 	}
 
-	// Если требуется GPU (VRAM) — добавляем DeviceRequests
-	if t.VRAMRequiredGB > 0 {
-		// Убеждаемся, что драйвер NVIDIA будет использоваться (DeviceRequest уже добавляется ниже)
-		// Добавляем лимит памяти (в ГБ)
-		env = setOrAppendEnv(env, "NVIDIA_MEM_MAX_GB", strconv.Itoa(t.VRAMRequiredGB))
-		// Рекомендуется явно указать capabilities, чтобы контейнер мог использовать GPU
-		env = setOrAppendEnv(env, "NVIDIA_DRIVER_CAPABILITIES", "compute,utility")
-	}
-
 	// 10. Основная конфигурация контейнера
 	config := &container.Config{
 		Image:  imageName,
@@ -215,4 +215,43 @@ func setOrAppendEnv(env []string, key, value string) []string {
 		}
 	}
 	return append(env, prefix+value)
+}
+
+func parseDockerOptions(options string) (envVars []string, extraLabels map[string]string, err error) {
+	extraLabels = make(map[string]string)
+	if options == "" {
+		return
+	}
+
+	// Разбиваем строку по пробелам (упрощённо)
+	parts := strings.Fields(options)
+	for i := 0; i < len(parts); i++ {
+		part := parts[i]
+		switch part {
+		case "-e", "--env":
+			if i+1 >= len(parts) {
+				err = fmt.Errorf("missing argument for %s", part)
+				return
+			}
+			envVars = append(envVars, parts[i+1])
+			i++ // пропускаем аргумент
+		case "-l", "--label":
+			if i+1 >= len(parts) {
+				err = fmt.Errorf("missing argument for %s", part)
+				return
+			}
+			labelPair := parts[i+1]
+			kv := strings.SplitN(labelPair, "=", 2)
+			if len(kv) == 2 {
+				extraLabels[kv[0]] = kv[1]
+			} else {
+				extraLabels[kv[0]] = "" // если нет значения
+			}
+			i++
+		default:
+			// Пропускаем неизвестные опции (или можно вернуть ошибку)
+			// Например: --shm-size, --ulimit и т.п. пока не поддерживаются
+		}
+	}
+	return
 }
