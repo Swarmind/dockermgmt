@@ -47,6 +47,7 @@ sleep 3600
 		TemplateName:         "test-alpine",
 		OnStartScript:        onStartScript,
 		ExtraFilters:         []string{"test=yes", "source=example"},
+		DiskSpaceMB:          3000,
 		DockerServerName:     "", // public hub
 		DockerUsername:       "",
 		DockerPassword:       "",
